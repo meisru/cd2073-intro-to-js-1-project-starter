@@ -38,21 +38,34 @@ products.push(product1, product2, product3);
 const cart = [];
 
 /**
+* @description get the correct product based on the productId
+* @param {array} productsList - list of products
+* @param {number} productId - id of the product
+* @returns {object} product object
+*/
+function getProductById(productsList, productId) {
+  return productsList.find((product) => product.productId === productId);
+}
+
+/**
 * @description get the correct product based on the productId,
   - increase the product's quantity,
   - if the product is not already in the cart, add it to the cart
 * @param {number} productId
 */
 function addProductToCart(productId) {
-  for (let i = 0; i < products.length; i++) {
-    if (products[i].productId === productId) {
-      products[i].quantity += 1;
-      // Check if the product is not in the cart
-      if (!cart.includes(products[i])) {
-        cart.push(products[i]);
-      }
-      break; // Exit the loop once the product is found
-    }
+  const product = getProductById(products, productId);
+
+  // terminate the function if the product doesn't exist
+  // or if the "product" object is undefined
+  if (!product) return;
+
+  // otherwise, increase the quantity of the product
+  product.quantity++;
+
+  // if the product is not already in the cart, add it to the cart
+  if (!cart.includes(product)) {
+    cart.push(product);
   }
 }
 
@@ -62,12 +75,9 @@ then increase the product's quantity
 * @param {number} productId
 */
 function increaseQuantity(productId) {
-  for (let i = 0; i < products.length; i++) {
-    if (products[i].productId === productId) {
-      products[i].quantity += 1;
-      break; 
-    }
-  }
+  const product = getProductById(products, productId);
+  if (!product) return;
+  product.quantity++;
 }
 
 /**
@@ -77,14 +87,11 @@ function increaseQuantity(productId) {
 * @param {number} productId
 */
 function decreaseQuantity(productId) {
-  for (let i = 0; i < products.length; i++) {
-    if (products[i].productId === productId) {
-      products[i].quantity -= 1; 
-      if (products[i].quantity === 0) {
-        cart.splice(cart.indexOf(products[i]), 1); // Remove the product from the cart
-      }
-      break; 
-    }
+  const product = getProductById(products, productId);
+  if (!product) return;
+  product.quantity--;
+  if (product.quantity === 0) {
+    cart.splice(cart.indexOf(product), 1); // Remove the product from the cart
   }
 }
 
@@ -95,25 +102,22 @@ function decreaseQuantity(productId) {
 * @param {number} productId
 */
 function removeProductFromCart(productId) {
-  for (let i = 0; i < products.length; i++) {
-    if (products[i].productId === productId) {
-      products[i].quantity = 0;
-      cart.splice(cart.indexOf(products[i]), 1); // Remove the product from the cart
-      break; // Exit the loop once the product is found
-    }
-  }
+  const product = getProductById(products, productId);
+  if (!product) return;
+  product.quantity = 0;
+  cart.splice(cart.indexOf(product), 1); // Remove the product from the cart
 }
 
 /**
-* @description iterates through the cart to get the total cost of all products
+* @description calculates the total cost of all products
 * @returns {number} total cost of the products in the cart
 */
 function cartTotal() {
-  let total = 0;
-  for (let i = 0; i < cart.length; i++) {
-    let itemTotal = cart[i].quantity * cart[i].price;
-    total += itemTotal; 
-  }
+  const initialValue = 0;
+  const total = cart.reduce((accumulator, product) => 
+    accumulator + product.price * product.quantity, 
+    initialValue
+  );
   return total;
 }
 
@@ -121,9 +125,7 @@ function cartTotal() {
 * @description empties the cart from products
 */
 function emptyCart() {
-  if (cart.length > 0) {
-  cart.length = 0; 
-  }
+  cart.length = 0;
 }
 
 /**
@@ -134,12 +136,12 @@ function emptyCart() {
 let totalPaid = 0;
 function pay(amount) {
   totalPaid += amount; 
-  if (amount >= cartTotal()) {
-    let change = totalPaid - cartTotal();
-    totalPaid = 0; // Reset totalPaid
-    return change;
+  let remainingBalance = totalPaid - cartTotal();
+  if (remainingBalance >= 0) {
+    totalPaid = 0;
+    emptyCart();
   }
-  return totalPaid - cartTotal();
+  return remainingBalance;
 }
 
 module.exports = {
